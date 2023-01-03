@@ -1,10 +1,5 @@
 package com.example.flutter_sample
 
-import androidx.annotation.NonNull
-import io.flutter.embedding.android.FlutterActivity
-import io.flutter.embedding.engine.FlutterEngine
-import io.flutter.plugin.common.MethodChannel
-
 
 import android.content.Context
 import android.content.ContextWrapper
@@ -13,12 +8,22 @@ import android.content.IntentFilter
 import android.os.BatteryManager
 import android.os.Build.VERSION
 import android.os.Build.VERSION_CODES
-
+import android.os.Bundle
+import androidx.annotation.NonNull
+import io.flutter.embedding.android.FlutterActivity
+import io.flutter.embedding.engine.FlutterEngine
+import io.flutter.embedding.engine.plugins.FlutterPlugin.FlutterPluginBinding
+import io.flutter.plugin.common.MethodChannel
+import io.flutter.plugin.common.StandardMethodCodec
+import kotlinx.coroutines.*
 
 
 class MainActivity: FlutterActivity() {
 
     private val CHANNEL = "samples.flutter.dev/battery"
+
+    private lateinit var toFlutter : MethodChannel;
+
     override fun configureFlutterEngine(@NonNull flutterEngine: FlutterEngine) {
         super.configureFlutterEngine(flutterEngine)
         MethodChannel(flutterEngine.dartExecutor.binaryMessenger, CHANNEL).setMethodCallHandler {
@@ -31,10 +36,18 @@ class MainActivity: FlutterActivity() {
                 } else {
                     result.error("UNAVAILABLE", "Battery level not available.", null)
                 }
-            } else {
+            } else if(call.method == "eventTest"){
+                toFlutter.invokeMethod("test", "test");
+                result.success("suc");
+            }else{
                 result.notImplemented()
             }
         }
+
+        toFlutter = MethodChannel(
+                flutterEngine.dartExecutor.binaryMessenger,
+                "com.example.foo")
+        delay();
     }
     private fun getBatteryLevel(): Int {
         val batteryLevel: Int
@@ -47,5 +60,10 @@ class MainActivity: FlutterActivity() {
         }
 
         return batteryLevel
+    }
+    fun delay() = runBlocking {
+        delay(3000L) // delay for 3 seconds
+
+        toFlutter.invokeMethod("test", "test")
     }
 }

@@ -31,8 +31,17 @@ class MyHomePage extends StatefulWidget {
 
 class _MyHomePageState extends State<MyHomePage> {
   static const platform = const MethodChannel('samples.flutter.dev/battery');
+  static const event = const MethodChannel('com.example.foo');
 
   String _batteryLevel = 'Unknown battery level.';
+
+  String eventText = "";
+
+  Future<void> invokeMethod() async {
+    try {
+      final String result = await platform.invokeMethod('eventTest');
+    } on PlatformException catch (e) {}
+  }
 
   Future<void> _getBatteryLevel() async {
     String batteryLevel;
@@ -46,6 +55,26 @@ class _MyHomePageState extends State<MyHomePage> {
     setState(() {
       _batteryLevel = batteryLevel;
     });
+  }
+
+  Future<void> _didRecieveTranscript(MethodCall call) async {
+    // type inference will work here avoiding an explicit cast
+    // final String utterance = call.arguments;
+    // switch(call.method) {
+    //   case "didRecieveTranscript":
+    //     processUtterance(utterance);
+    // }
+    if (call.method == "test") {
+      setState(() {
+        eventText = "test";
+      });
+    }
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    event.setMethodCallHandler(_didRecieveTranscript);
   }
 
   @override
@@ -62,6 +91,11 @@ class _MyHomePageState extends State<MyHomePage> {
               child: const Text('Get Battery Level'),
             ),
             Text(_batteryLevel),
+            ElevatedButton(
+              onPressed: invokeMethod,
+              child: const Text('Get Battery Level'),
+            ),
+            Text("test : " + eventText),
           ],
         ),
       ),
